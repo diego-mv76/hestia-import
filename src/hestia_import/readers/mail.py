@@ -1,12 +1,11 @@
-import tarfile
-
+from hestia_import.backup_archive import BackupArchive
 from hestia_import.models import MailAccount
 
 
 class MailReader:
 
-    def __init__(self, tar: tarfile.TarFile, root_dir: str):
-        self.tar = tar
+    def __init__(self, archive: BackupArchive, root_dir: str):
+        self.archive = archive
         self.root_dir = root_dir
 
     def read(self) -> list[MailAccount]:
@@ -15,12 +14,9 @@ class MailReader:
 
         prefix = f"{self.root_dir}/homedir/mail/"
 
-        for member in self.tar.getmembers():
+        for member in self.archive.walk(prefix):
 
             if not member.isdir():
-                continue
-
-            if not member.name.startswith(prefix):
                 continue
 
             relative = member.name[len(prefix):].strip("/")
@@ -33,10 +29,10 @@ class MailReader:
             #
             # Solo aceptamos:
             #
-            # homedir/mail/dominio/cuenta
+            # dominio/cuenta
             #
             # Ejemplo:
-            #   reprearg.com/marianoines
+            # reprearg.com/marianoines
             #
             if len(parts) != 2:
                 continue
@@ -45,18 +41,18 @@ class MailReader:
             username = parts[1]
 
             #
-            # El primer nivel debe ser un dominio
-            #
-            if "." not in domain:
-                continue
-
-            #
             # Ignorar carpetas ocultas
             #
             if domain.startswith("."):
                 continue
 
             if username.startswith("."):
+                continue
+
+            #
+            # Debe ser un dominio válido
+            #
+            if "." not in domain:
                 continue
 
             accounts[(domain, username)] = MailAccount(

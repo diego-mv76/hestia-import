@@ -1,9 +1,10 @@
 import os
 import tarfile
 
+from hestia_import.backup_archive import BackupArchive
 from hestia_import.models import BackupInfo
-from hestia_import.readers.userdata import UserdataReader
 from hestia_import.readers.mail import MailReader
+from hestia_import.readers.userdata import UserdataReader
 
 
 class CPanelBackupParser:
@@ -35,6 +36,11 @@ class CPanelBackupParser:
 
             username = root.replace("cpmove-", "", 1)
 
+            #
+            # Nueva capa de acceso al backup
+            #
+            archive = BackupArchive(tar)
+
             info = BackupInfo(
                 filename=os.path.basename(self.backup_file),
                 size=size,
@@ -43,9 +49,9 @@ class CPanelBackupParser:
             )
 
             #
-            # Dominio
+            # Información del dominio
             #
-            userdata = UserdataReader(tar, root).read()
+            userdata = UserdataReader(archive, root).read()
 
             if userdata:
                 info.main_domain = userdata["main_domain"]
@@ -62,6 +68,9 @@ class CPanelBackupParser:
             #
             # Correo
             #
-            info.mail_accounts = MailReader(tar, root).read()
+            info.mail_accounts = MailReader(
+                archive,
+                root,
+            ).read()
 
             return info

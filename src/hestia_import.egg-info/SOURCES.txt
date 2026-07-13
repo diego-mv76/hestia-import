@@ -2,6 +2,7 @@ LICENSE
 README.md
 pyproject.toml
 src/hestia_import/__init__.py
+src/hestia_import/backup_archive.py
 src/hestia_import/cli.py
 src/hestia_import/models.py
 src/hestia_import/parser.py
