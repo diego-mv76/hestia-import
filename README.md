@@ -1,5 +1,15 @@
 # Hestia Import
 
-Migrador de backups cPanel hacia HestiaCP.
+Migrador de backups de cPanel hacia HestiaCP.
 
-Proyecto desarrollado por la comunidad.
+## Características
+
+- Analizar backups cPanel
+- Migrar sitios web
+- Migrar bases MySQL
+- Migrar cuentas de correo
+- Migrar SSL
+- Migrar DNS
+- Migrar Cron
+
+Proyecto Open Source.
