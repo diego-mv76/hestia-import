@@ -6,6 +6,30 @@ class MailAccount:
     username: str
     domain: str
 
+    #
+    # Ruta del Maildir
+    #
+    home: str = ""
+
+    #
+    # Hash SHA512 del archivo shadow
+    #
+    password_hash: str = ""
+
+    #
+    # Cuota configurada
+    #
+    quota: str = ""
+
+    #
+    # Estadísticas del buzón
+    #
+    messages: int = 0
+
+    size_bytes: int = 0
+
+    folders: list[str] = field(default_factory=list)
+
 
 @dataclass
 class BackupInfo:

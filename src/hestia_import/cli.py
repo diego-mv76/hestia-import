@@ -27,15 +27,22 @@ def analyze(backup: str):
         parser = CPanelBackupParser(backup)
         info = parser.analyze()
 
+        #
+        # Información general
+        #
         console.rule("[bold green]Información del Backup")
 
         console.print(f"[cyan]Archivo:[/cyan]          {info.filename}")
         console.print(f"[cyan]Usuario:[/cyan]          {info.username}")
         console.print(f"[cyan]Directorio:[/cyan]       {info.root_dir}")
-        console.print(f"[cyan]Tamaño:[/cyan]           {round(info.size / 1024 / 1024, 2)} MB")
+        console.print(
+            f"[cyan]Tamaño:[/cyan]           {round(info.size / 1024 / 1024, 2)} MB"
+        )
 
+        #
+        # Sitio web
+        #
         console.print()
-
         console.rule("[bold blue]Sitio Web")
 
         console.print(f"[cyan]Dominio:[/cyan]          {info.main_domain}")
@@ -43,7 +50,9 @@ def analyze(backup: str):
         console.print(f"[cyan]IP:[/cyan]               {info.ip}")
         console.print(f"[cyan]DocumentRoot:[/cyan]     {info.document_root}")
         console.print(f"[cyan]ServerAdmin:[/cyan]      {info.server_admin}")
-        console.print(f"[cyan]SSL:[/cyan]              {'Sí' if info.ssl_enabled else 'No'}")
+        console.print(
+            f"[cyan]SSL:[/cyan]              {'Sí' if info.ssl_enabled else 'No'}"
+        )
 
         if info.aliases:
             console.print()
@@ -52,6 +61,9 @@ def analyze(backup: str):
             for alias in info.aliases:
                 console.print(f"  • {alias}")
 
+        #
+        # Correo
+        #
         console.print()
         console.rule("[bold blue]Correo")
 
@@ -61,11 +73,38 @@ def analyze(backup: str):
             console.print()
 
             for account in sorted(info.mail_accounts, key=lambda x: x.username):
-                console.print(f"✔ {account.username}@{account.domain}")
 
-            console.print()
+                console.print(
+                    f"[bold green]✔ {account.username}@{account.domain}[/bold green]"
+                )
+
+                if account.home:
+                    console.print(f"    Home.......... {account.home}")
+
+                if account.password_hash:
+                    console.print("    Password...... SHA512")
+
+                if account.quota:
+                    console.print(f"    Quota......... {account.quota}")
+                else:
+                    console.print("    Quota......... Unlimited")
+
+                console.print(f"    Mensajes...... {account.messages}")
+
+                console.print(
+                    f"    Carpetas...... {len(account.folders)}"
+                )
+
+                size_mb = account.size_bytes / 1024 / 1024
+
+                console.print(
+                    f"    Tamaño........ {size_mb:.2f} MB"
+                )
+
+                console.print()
+
             console.print(
-                f"[green]Total de cuentas:[/green] {len(info.mail_accounts)}"
+                f"[bold cyan]Total de cuentas:[/bold cyan] {len(info.mail_accounts)}"
             )
 
         else:
