@@ -5,6 +5,7 @@ from hestia_import.backup_archive import BackupArchive
 from hestia_import.models import BackupInfo
 from hestia_import.readers.mail import MailReader
 from hestia_import.readers.userdata import UserdataReader
+from hestia_import.readers.mysql import MySQLReader
 
 
 class CPanelBackupParser:
@@ -72,5 +73,30 @@ class CPanelBackupParser:
                 archive,
                 root,
             ).read()
+
+            #
+            # MySQL
+            #
+            info.databases = MySQLReader(
+                archive,
+                root,
+            ).read()
+
+            #
+            # Resumen global
+            #
+            info.total_domains = 1 + len(info.addon_domains)
+
+            info.total_mail_accounts = len(info.mail_accounts)
+
+            info.total_messages = sum(
+                account.messages
+                for account in info.mail_accounts
+            )
+
+            info.total_mail_size = sum(
+                account.size_bytes
+                for account in info.mail_accounts
+            )
 
             return info
