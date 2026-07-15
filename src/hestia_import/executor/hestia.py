@@ -6,6 +6,7 @@ from hestia_import.models import (
     MigrationTask,
 )
 from hestia_import.hestia.client import HestiaClient
+from hestia_import.hestia.inspector import HestiaInspector
 
 console = Console()
 
@@ -14,8 +15,10 @@ console = Console()
 #
 SUPPORTED_ACTIONS = {
     "create_user",
+    "create_domain",
+    "create_alias",
+    "create_mail_account",
 }
-
 
 class HestiaExecutor:
     """
@@ -31,6 +34,8 @@ class HestiaExecutor:
         self.context = context
 
         self.client = HestiaClient()
+
+        self.inspector = HestiaInspector()
 
         self.runner = CommandRunner(
             dry_run=dry_run,
@@ -73,12 +78,26 @@ class HestiaExecutor:
         # Ejecución real solamente para acciones soportadas.
         #
         if task.action in SUPPORTED_ACTIONS:
+
+            #
+            # Evitar crear usuarios duplicados.
+            #
+            if (
+                task.action == "create_user"
+                and self.inspector.user_exists(task.data["username"])
+            ):
+                console.print(
+                    f"[yellow]SKIP[/yellow] Usuario '{task.data['username']}' ya existe."
+                )
+                return
+
             self.runner.run(command)
+
         else:
+
             console.print(
                 f"[yellow]DRY[/yellow] {' '.join(command)}"
             )
-
     # ------------------------------------------------------------------
     # Usuario
     # ------------------------------------------------------------------

@@ -81,6 +81,22 @@ class MigrationPlanner:
             )
 
         #
+        # Restaurar contraseña original
+        #
+            plan.tasks.append(
+                MigrationTask(
+                    action="restore_mail_password",
+                    description=f"Restaurar contraseña de {account.username}@{account.domain}",
+                    data={
+                        "user": info.username,
+                        "username": account.username,
+                        "domain": account.domain,
+                        "password_hash": account.password_hash,
+                    },
+                )
+            )
+
+        #
         # Bases MySQL
         #
         for db in info.databases:

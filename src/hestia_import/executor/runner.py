@@ -19,7 +19,16 @@ class CommandRunner:
     def __init__(self, dry_run: bool = True):
         self.dry_run = dry_run
 
-    def run(self, command: list[str]) -> None:
+    def run(
+        self,
+        command: list[str],
+        capture_output: bool = False,
+    ) -> subprocess.CompletedProcess | None:
+        """
+        Ejecuta un comando.
+
+        Si capture_output=True devuelve stdout y stderr.
+        """
 
         #
         # Dry Run
@@ -27,19 +36,31 @@ class CommandRunner:
         if self.dry_run:
 
             console.print("[cyan]$[/cyan] " + " ".join(command))
-            return
+            return None
 
         #
         # Mostrar comando
         #
         console.print("[green]►[/green] " + " ".join(command))
 
-        #
-        # Ejecutar
-        #
-        subprocess.run(
-            command,
-            check=True,
-        )
+        try:
+
+            result = subprocess.run(
+                command,
+                check=True,
+                text=True,
+                capture_output=capture_output,
+            )
+
+        except subprocess.CalledProcessError as e:
+
+            console.print("[red]✖ ERROR[/red]")
+
+            if e.stderr:
+                console.print(e.stderr.strip())
+
+            raise
 
         console.print("[green]✔ OK[/green]")
+
+        return result
