@@ -116,3 +116,29 @@ class BackupInfo:
     total_messages: int = 0
     total_mail_size: int = 0
     total_databases: int = 0
+
+@dataclass
+class MigrationContext:
+    """
+    Configuración del destino de la migración.
+    """
+
+    #
+    # Email del administrador de Hestia
+    #
+    admin_email: str = "admin@example.com"
+
+    #
+    # Contraseña inicial del usuario
+    #
+    user_password: str = ""
+
+    #
+    # Paquete de Hestia
+    #
+    package: str = "default"
+
+    #
+    # Idioma del usuario
+    #
+    language: str = "en"

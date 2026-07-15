@@ -4,6 +4,7 @@ from rich.console import Console
 from hestia_import.executor.hestia import HestiaExecutor
 from hestia_import.parser import CPanelBackupParser
 from hestia_import.planner import MigrationPlanner
+from hestia_import.models import MigrationContext
 
 console = Console()
 
@@ -25,8 +26,10 @@ def execute(
 
     planner = MigrationPlanner()
     migration = planner.create_plan(info)
+    context = MigrationContext()
 
     executor = HestiaExecutor(
+        context=context,
         dry_run=not execute,
     )
 

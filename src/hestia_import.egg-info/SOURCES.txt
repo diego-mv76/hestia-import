@@ -21,6 +21,7 @@ src/hestia_import/commands/plan.py
 src/hestia_import/executor/__init__.py
 src/hestia_import/executor/hestia.py
 src/hestia_import/executor/runner.py
+src/hestia_import/hestia/client.py
 src/hestia_import/readers/__init__.py
 src/hestia_import/readers/cli.py
 src/hestia_import/readers/mail.py
