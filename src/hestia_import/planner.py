@@ -44,6 +44,20 @@ class MigrationPlanner:
         )
 
         #
+        # Dominio de correo
+        #
+        plan.tasks.append(
+            MigrationTask(
+                action="create_mail_domain",
+                description=f"Crear dominio de correo '{info.main_domain}'",
+                data={
+                    "user": info.username,
+                    "domain": info.main_domain,
+                },
+            )
+        )
+
+        #
         # Alias
         #
         for alias in info.aliases:
@@ -80,9 +94,9 @@ class MigrationPlanner:
                 )
             )
 
-        #
-        # Restaurar contraseña original
-        #
+            #
+            # Restaurar contraseña original
+            #
             plan.tasks.append(
                 MigrationTask(
                     action="restore_mail_password",

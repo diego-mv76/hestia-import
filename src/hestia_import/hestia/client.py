@@ -35,6 +35,18 @@ class HestiaClient:
             domain,
         ]
 
+    def add_mail_domain(
+        self,
+        user: str,
+        domain: str,
+    ) -> list[str]:
+
+        return [
+            "v-add-mail-domain",
+            user,
+            domain,
+        ]
+
     def add_alias(
         self,
         user: str,

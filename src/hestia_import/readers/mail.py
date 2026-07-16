@@ -155,6 +155,7 @@ class MailReader:
         """
         Analiza el Maildir para obtener:
 
+        - ruta del Maildir
         - cantidad de mensajes
         - tamaño ocupado
         - carpetas IMAP
@@ -187,6 +188,14 @@ class MailReader:
                 continue
 
             account = accounts[key]
+
+            #
+            # Guardar la ruta del Maildir una sola vez
+            #
+            if not account.maildir_source:
+                account.maildir_source = (
+                    f"{self.root_dir}/homedir/mail/{domain}/{username}"
+                )
 
             #
             # Detectar carpetas IMAP

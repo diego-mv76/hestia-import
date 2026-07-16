@@ -2,9 +2,9 @@ import typer
 from rich.console import Console
 
 from hestia_import.executor.hestia import HestiaExecutor
+from hestia_import.models import MigrationContext
 from hestia_import.parser import CPanelBackupParser
 from hestia_import.planner import MigrationPlanner
-from hestia_import.models import MigrationContext
 
 console = Console()
 
@@ -26,6 +26,7 @@ def execute(
 
     planner = MigrationPlanner()
     migration = planner.create_plan(info)
+
     context = MigrationContext()
 
     executor = HestiaExecutor(
@@ -54,5 +55,14 @@ def execute(
         if not confirm:
             raise typer.Exit()
 
-    for task in migration.tasks:
+    total = len(migration.tasks)
+
+    for index, task in enumerate(migration.tasks, start=1):
+
+        console.print()
+
+        console.rule(
+            f"[bold blue][{index}/{total}][/bold blue] {task.description}"
+        )
+
         executor.execute(task)

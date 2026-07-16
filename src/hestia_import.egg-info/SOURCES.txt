@@ -23,6 +23,8 @@ src/hestia_import/executor/hestia.py
 src/hestia_import/executor/runner.py
 src/hestia_import/hestia/client.py
 src/hestia_import/hestia/inspector.py
+src/hestia_import/mail/account_restore.py
+src/hestia_import/mail/maildir.py
 src/hestia_import/mail/passwords.py
 src/hestia_import/readers/__init__.py
 src/hestia_import/readers/cli.py

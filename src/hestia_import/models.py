@@ -8,9 +8,14 @@ class MailAccount:
     domain: str
 
     #
-    # Ruta del Maildir
+    # Ruta del Maildir (home de la cuenta)
     #
     home: str = ""
+
+    #
+    # Ruta del Maildir dentro del backup cPanel
+    #
+    maildir_source: str = ""
 
     #
     # Hash SHA512 del archivo shadow
@@ -116,6 +121,7 @@ class BackupInfo:
     total_messages: int = 0
     total_mail_size: int = 0
     total_databases: int = 0
+
 
 @dataclass
 class MigrationContext:

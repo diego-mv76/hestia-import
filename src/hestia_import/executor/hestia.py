@@ -1,28 +1,20 @@
 from rich.console import Console
 
 from hestia_import.executor.runner import CommandRunner
+from hestia_import.hestia.client import HestiaClient
+from hestia_import.hestia.inspector import HestiaInspector
+from hestia_import.mail.account_restore import MailAccountRestorer
 from hestia_import.models import (
     MigrationContext,
     MigrationTask,
 )
-from hestia_import.hestia.client import HestiaClient
-from hestia_import.hestia.inspector import HestiaInspector
 
 console = Console()
 
-#
-# Acciones que actualmente pueden ejecutarse de forma real.
-#
-SUPPORTED_ACTIONS = {
-    "create_user",
-    "create_domain",
-    "create_alias",
-    "create_mail_account",
-}
 
 class HestiaExecutor:
     """
-    Convierte las tareas del plan de migración en comandos de HestiaCP.
+    Convierte una MigrationTask en una acción.
     """
 
     def __init__(
@@ -37,72 +29,87 @@ class HestiaExecutor:
 
         self.inspector = HestiaInspector()
 
+        self.mail_restorer = MailAccountRestorer()
+
         self.runner = CommandRunner(
             dry_run=dry_run,
         )
 
-        #
-        # Tabla de acciones soportadas.
-        #
         self.handlers = {
             "create_user": self.create_user,
             "create_domain": self.create_domain,
+            "create_mail_domain": self.create_mail_domain,
             "create_alias": self.create_alias,
             "create_mail_account": self.create_mail_account,
+            "restore_mail_password": self.restore_mail_password,
             "create_database": self.create_database,
             "restore_web": self.restore_web,
             "restore_mail": self.restore_mail,
             "install_ssl": self.install_ssl,
         }
 
-    def execute(self, task: MigrationTask) -> None:
-        """
-        Ejecuta (o muestra) una tarea del plan.
-        """
+    def execute(
+        self,
+        task: MigrationTask,
+    ) -> None:
+
+        #
+        # Evitar recrear recursos existentes.
+        #
+        if task.action == "create_user":
+
+            if self.inspector.user_exists(
+                task.data["username"]
+            ):
+
+                console.print(
+                    f"[yellow]⏭ Usuario '{task.data['username']}' ya existe.[/yellow]"
+                )
+                return
+
+        elif task.action == "create_domain":
+
+            if self.inspector.web_domain_exists(
+                task.data["user"],
+                task.data["domain"],
+            ):
+
+                console.print(
+                    f"[yellow]⏭ Dominio '{task.data['domain']}' ya existe.[/yellow]"
+                )
+                return
+
+        elif task.action == "create_mail_domain":
+
+            if self.inspector.mail_domain_exists(
+                task.data["user"],
+                task.data["domain"],
+            ):
+
+                console.print(
+                    f"[yellow]⏭ Dominio de correo '{task.data['domain']}' ya existe.[/yellow]"
+                )
+                return
 
         handler = self.handlers.get(task.action)
 
         if handler is None:
-            raise ValueError(f"Acción no soportada: {task.action}")
+            raise ValueError(
+                f"Acción no soportada: {task.action}"
+            )
 
-        command = handler(task.data)
+        result = handler(task.data)
 
-        #
-        # Dry Run: mostrar absolutamente todo.
-        #
-        if self.runner.dry_run:
-            self.runner.run(command)
+        if result is None:
             return
 
-        #
-        # Ejecución real solamente para acciones soportadas.
-        #
-        if task.action in SUPPORTED_ACTIONS:
+        self.runner.run(result)
 
-            #
-            # Evitar crear usuarios duplicados.
-            #
-            if (
-                task.action == "create_user"
-                and self.inspector.user_exists(task.data["username"])
-            ):
-                console.print(
-                    f"[yellow]SKIP[/yellow] Usuario '{task.data['username']}' ya existe."
-                )
-                return
-
-            self.runner.run(command)
-
-        else:
-
-            console.print(
-                f"[yellow]DRY[/yellow] {' '.join(command)}"
-            )
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
     # Usuario
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
 
-    def create_user(self, data: dict) -> list[str]:
+    def create_user(self, data: dict):
 
         return self.client.add_user(
             username=data["username"],
@@ -112,22 +119,33 @@ class HestiaExecutor:
             language=self.context.language,
         )
 
-    # ------------------------------------------------------------------
-    # Dominio
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
+    # Dominio Web
+    # ---------------------------------------------------------
 
-    def create_domain(self, data: dict) -> list[str]:
+    def create_domain(self, data: dict):
 
         return self.client.add_domain(
             user=data["user"],
             domain=data["domain"],
         )
 
-    # ------------------------------------------------------------------
-    # Alias
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
+    # Dominio Mail
+    # ---------------------------------------------------------
 
-    def create_alias(self, data: dict) -> list[str]:
+    def create_mail_domain(self, data: dict):
+
+        return self.client.add_mail_domain(
+            user=data["user"],
+            domain=data["domain"],
+        )
+
+    # ---------------------------------------------------------
+    # Alias
+    # ---------------------------------------------------------
+
+    def create_alias(self, data: dict):
 
         return self.client.add_alias(
             user=data["user"],
@@ -135,11 +153,11 @@ class HestiaExecutor:
             alias=data["alias"],
         )
 
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
     # Mail
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
 
-    def create_mail_account(self, data: dict) -> list[str]:
+    def create_mail_account(self, data: dict):
 
         return self.client.add_mail_account(
             user=data["user"],
@@ -148,11 +166,39 @@ class HestiaExecutor:
             password="<PASSWORD>",
         )
 
-    # ------------------------------------------------------------------
-    # MySQL
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
+    # Restaurar contraseña
+    # ---------------------------------------------------------
 
-    def create_database(self, data: dict) -> list[str]:
+    def restore_mail_password(self, data: dict):
+
+        if self.runner.dry_run:
+
+            return [
+                "#",
+                "restore_mail_password",
+                data["username"],
+            ]
+
+        self.mail_restorer.restore_password(
+            user=data["user"],
+            domain=data["domain"],
+            username=data["username"],
+            password_hash=data["password_hash"],
+        )
+
+        console.print(
+            f"[green]✔[/green] Contraseña restaurada para "
+            f"{data['username']}@{data['domain']}"
+        )
+
+        return None
+
+    # ---------------------------------------------------------
+    # Base de datos
+    # ---------------------------------------------------------
+
+    def create_database(self, data: dict):
 
         return self.client.add_database(
             user=data["user"],
@@ -161,11 +207,11 @@ class HestiaExecutor:
             password="<PASSWORD>",
         )
 
-    # ------------------------------------------------------------------
-    # Restaurar sitio
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
+    # Restaurar Web
+    # ---------------------------------------------------------
 
-    def restore_web(self, data: dict) -> list[str]:
+    def restore_web(self, data: dict):
 
         return [
             "#",
@@ -173,11 +219,11 @@ class HestiaExecutor:
             data["document_root"],
         ]
 
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
     # Restaurar Maildir
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
 
-    def restore_mail(self, data: dict) -> list[str]:
+    def restore_mail(self, data: dict):
 
         return [
             "#",
@@ -186,11 +232,11 @@ class HestiaExecutor:
             str(data["messages"]),
         ]
 
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
     # SSL
-    # ------------------------------------------------------------------
+    # ---------------------------------------------------------
 
-    def install_ssl(self, data: dict) -> list[str]:
+    def install_ssl(self, data: dict):
 
         return self.client.install_ssl(
             user=data["user"],
