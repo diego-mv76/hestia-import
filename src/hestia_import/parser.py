@@ -47,6 +47,7 @@ class CPanelBackupParser:
 
             info = BackupInfo(
                 filename=os.path.basename(self.backup_file),
+                path=self.backup_file,
                 size=size,
                 username=username,
                 root_dir=root,

@@ -12,7 +12,9 @@ class MigrationPlanner:
 
     def create_plan(self, info: BackupInfo) -> MigrationPlan:
 
-        plan = MigrationPlan()
+        plan = MigrationPlan(
+            backup_file=info.filename,
+        )
 
         #
         # Usuario

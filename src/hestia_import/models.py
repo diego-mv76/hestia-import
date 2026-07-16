@@ -72,6 +72,15 @@ class MigrationPlan:
     Plan completo de migración.
     """
 
+    #
+    # Backup origen
+    #
+    backup_file: str = ""
+
+    #
+    # Tareas
+    #
+
     tasks: list[MigrationTask] = field(default_factory=list)
 
 
@@ -82,6 +91,10 @@ class BackupInfo:
     # Información básica
     #
     filename: str
+    #
+    # Ruta completa del backup
+    #
+    path: str
     size: int
     username: str
     root_dir: str
