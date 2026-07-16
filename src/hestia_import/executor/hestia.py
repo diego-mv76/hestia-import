@@ -30,7 +30,7 @@ class HestiaExecutor:
         self.inspector = HestiaInspector()
 
         self.mail_restorer = MailAccountRestorer()
-
+        
         self.runner = CommandRunner(
             dry_run=dry_run,
         )
@@ -42,9 +42,9 @@ class HestiaExecutor:
             "create_alias": self.create_alias,
             "create_mail_account": self.create_mail_account,
             "restore_mail_password": self.restore_mail_password,
+            "restore_maildir": self.restore_maildir,
             "create_database": self.create_database,
             "restore_web": self.restore_web,
-            "restore_mail": self.restore_mail,
             "install_ssl": self.install_ssl,
         }
 
@@ -54,7 +54,7 @@ class HestiaExecutor:
     ) -> None:
 
         #
-        # Evitar recrear recursos existentes.
+        # Evitar recrear recursos existentes
         #
         if task.action == "create_user":
 
@@ -154,7 +154,7 @@ class HestiaExecutor:
         )
 
     # ---------------------------------------------------------
-    # Mail
+    # Cuenta Mail
     # ---------------------------------------------------------
 
     def create_mail_account(self, data: dict):
@@ -195,7 +195,35 @@ class HestiaExecutor:
         return None
 
     # ---------------------------------------------------------
-    # Base de datos
+    # Restaurar Maildir
+    # ---------------------------------------------------------
+
+    def restore_maildir(self, data: dict):
+
+        if self.runner.dry_run:
+
+            return [
+                "#",
+                "restore_maildir",
+                data["username"],
+            ]
+
+        self.mail_restorer.restore_maildir(
+            source=data["source"],
+            user=data["user"],
+            domain=data["domain"],
+            username=data["username"],
+        )
+
+        console.print(
+            f"[green]✔[/green] Maildir restaurado para "
+            f"{data['username']}@{data['domain']}"
+        )
+
+        return None
+
+    # ---------------------------------------------------------
+    # Base MySQL
     # ---------------------------------------------------------
 
     def create_database(self, data: dict):
@@ -217,19 +245,6 @@ class HestiaExecutor:
             "#",
             "restore_web",
             data["document_root"],
-        ]
-
-    # ---------------------------------------------------------
-    # Restaurar Maildir
-    # ---------------------------------------------------------
-
-    def restore_mail(self, data: dict):
-
-        return [
-            "#",
-            "restore_mail",
-            str(data["accounts"]),
-            str(data["messages"]),
         ]
 
     # ---------------------------------------------------------

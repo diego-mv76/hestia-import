@@ -79,6 +79,9 @@ class MigrationPlanner:
         #
         for account in info.mail_accounts:
 
+            #
+            # Crear cuenta
+            #
             plan.tasks.append(
                 MigrationTask(
                     action="create_mail_account",
@@ -95,7 +98,7 @@ class MigrationPlanner:
             )
 
             #
-            # Restaurar contraseña original
+            # Restaurar contraseña
             #
             plan.tasks.append(
                 MigrationTask(
@@ -106,6 +109,22 @@ class MigrationPlanner:
                         "username": account.username,
                         "domain": account.domain,
                         "password_hash": account.password_hash,
+                    },
+                )
+            )
+
+            #
+            # Restaurar Maildir
+            #
+            plan.tasks.append(
+                MigrationTask(
+                    action="restore_maildir",
+                    description=f"Restaurar Maildir de {account.username}@{account.domain}",
+                    data={
+                        "source": account.maildir_source,
+                        "user": info.username,
+                        "domain": account.domain,
+                        "username": account.username,
                     },
                 )
             )
@@ -140,23 +159,6 @@ class MigrationPlanner:
                 },
             )
         )
-
-        #
-        # Restaurar correo
-        #
-        if info.mail_accounts:
-
-            plan.tasks.append(
-                MigrationTask(
-                    action="restore_mail",
-                    description="Restaurar Maildir",
-                    data={
-                        "user": info.username,
-                        "accounts": len(info.mail_accounts),
-                        "messages": info.total_messages,
-                    },
-                )
-            )
 
         #
         # SSL

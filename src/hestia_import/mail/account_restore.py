@@ -12,7 +12,6 @@ class MailAccountRestorer:
     def __init__(self):
 
         self.passwords = MailPasswordRestorer()
-
         self.maildir = MaildirRestorer()
 
     # ---------------------------------------------------------

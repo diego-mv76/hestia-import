@@ -12,6 +12,7 @@ class CPanelBackupParser:
 
     def __init__(self, backup_file: str):
         self.backup_file = backup_file
+        self.archive = None
 
     def analyze(self) -> BackupInfo:
 
@@ -40,7 +41,9 @@ class CPanelBackupParser:
             #
             # Nueva capa de acceso al backup
             #
-            archive = BackupArchive(tar)
+            self.archive = BackupArchive(tar)
+
+            archive = self.archive
 
             info = BackupInfo(
                 filename=os.path.basename(self.backup_file),

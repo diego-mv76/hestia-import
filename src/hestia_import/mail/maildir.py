@@ -19,16 +19,9 @@ class MaildirRestorer:
         if not source_path.exists():
             raise FileNotFoundError(source)
 
-        #
-        # Si existe un Maildir anterior, eliminarlo.
-        #
         if destination_path.exists():
             shutil.rmtree(destination_path)
 
-        #
-        # Copiar preservando permisos,
-        # timestamps y enlaces.
-        #
         shutil.copytree(
             source_path,
             destination_path,

@@ -22,9 +22,11 @@ def execute(
     """
 
     parser = CPanelBackupParser(backup)
+
     info = parser.analyze()
 
     planner = MigrationPlanner()
+
     migration = planner.create_plan(info)
 
     context = MigrationContext()
@@ -33,7 +35,6 @@ def execute(
         context=context,
         dry_run=not execute,
     )
-
     console.rule(
         "[bold green]Dry Run"
         if not execute
