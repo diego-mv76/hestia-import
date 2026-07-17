@@ -66,4 +66,7 @@ def execute(
             f"[bold blue][{index}/{total}][/bold blue] {task.description}"
         )
 
-        executor.execute(task)
+        executor.execute(
+            task,
+            migration,
+        )

@@ -9,6 +9,8 @@ from hestia_import.models import (
     MigrationTask,
 )
 
+from hestia_import.tasks.mail import MailTasks
+
 console = Console()
 
 
@@ -35,14 +37,20 @@ class HestiaExecutor:
             dry_run=dry_run,
         )
 
+        self.mail = MailTasks(
+            context=self.context,
+            client=self.client,
+            runner=self.runner,
+        )
+
         self.handlers = {
             "create_user": self.create_user,
             "create_domain": self.create_domain,
-            "create_mail_domain": self.create_mail_domain,
+            "create_mail_domain": self.mail.create_mail_domain,
             "create_alias": self.create_alias,
-            "create_mail_account": self.create_mail_account,
-            "restore_mail_password": self.restore_mail_password,
-            "restore_maildir": self.restore_maildir,
+            "create_mail_account": self.mail.create_mail_account,
+            "restore_mail_password": self.mail.restore_mail_password,
+            "restore_maildir": self.mail.restore_maildir,
             "create_database": self.create_database,
             "restore_web": self.restore_web,
             "install_ssl": self.install_ssl,
@@ -51,6 +59,7 @@ class HestiaExecutor:
     def execute(
         self,
         task: MigrationTask,
+        plan,
     ) -> None:
 
         #
